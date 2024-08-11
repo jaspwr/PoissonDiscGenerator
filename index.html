@@ -42,7 +42,7 @@ Radius: <input type="number" value="0.004" id="radius" step="0.001">
 
     if (isNaN(pointsCount) || isNaN(radius) || pointsCount < 1 || radius <= 0 || pointsCount > 500) {
       alert("Invalid parameters");
-      return;
+      throw null;
     }
   }
 
