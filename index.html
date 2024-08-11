@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<h1>Poisson Disk Generator</h1>
+<p>
+Simple Poisson Disk Generator for sampling in GLSL.
+</p>
+<textarea id="result" style="width: 50%; height: 200px;"></textarea>
+<br>
+<canvas width="600" height="600" id="canvas"></canvas>
+<br>
+Points: <input type="number" value="100" id="pointsCount">
+<br>
+Radius: <input type="number" value="0.004" id="radius" step="0.001">
+<br>
+
+<script>
+  const canvas = document.getElementById("canvas");
+  const ctx = canvas.getContext("2d");
+
+  const width = canvas.width;
+  const height = canvas.height;
+
+  function drawDot(x, y) {
+    ctx.fillStyle = "black";
+    ctx.beginPath();
+    const scale = 50000;
+    const drawX = (x * scale) + width / 2;
+    const drawY = (y * scale) + height / 2;
+    ctx.arc(drawX, drawY, 5, 0, 2 * Math.PI);
+    ctx.fill();
+  }
+
+  let points = [];
+
+  function reset() {
+    ctx.fillStyle = "white";
+    ctx.fillRect(0, 0, width, height);
+    points = [];
+  }
+
+  let radius = 0.004;
+  let pointsCount = 64;
+
+  function newPoint() {
+    const theta = Math.random() * Math.PI * 2;
+    const r = Math.random() * radius;
+    const x = Math.cos(theta) * r;
+    const y = Math.sin(theta) * r;
+    return {x, y};
+  }
+
+  function spread() {
+    let minDist = Math.sqrt(Math.PI * radius * radius / pointsCount) * 0.85;
+
+    for (let i = 0; i < pointsCount; i++) {
+      let retrys = 0;
+      for (let j = 0; j < pointsCount; j++) {
+        if (i === j) continue;
+        const distance = Math.hypot(
+          points[i].x - points[j].x,
+          points[i].y - points[j].y
+        );
+        if (distance < minDist) {
+          points[i] = newPoint();
+          j = 0;
+          if (retrys++ > 1000) {
+            break;
+          }
+        }
+      }
+    }
+  }
+
+  function toGlsl() {
+    let result = "";
+    for (const point of points) {
+      result += `vec2(${point.x.toFixed(9)}, ${point.y.toFixed(9)}),\n`;
+    }
+    const textArea = document.getElementById("result");
+    textArea.value = result;
+  }
+
+  function generatePoints() {
+    pointsCount = parseFloat(document.getElementById("pointsCount").value);
+    radius = parseFloat(document.getElementById("radius").value);
+
+    reset();
+    for (let i = 0; i < pointsCount; i++) {
+      points.push(newPoint());
+    }
+
+    for (let i = 0; i < 4; i++) {
+      spread();
+    }
+
+    drawPoints();
+    toGlsl();
+  }
+
+  function drawPoints() {
+    for (const point of points) {
+      drawDot(point.x, point.y);
+    }
+  }
+
+  generatePoints();
+</script>
+
+<button onclick="generatePoints()">Generate</button>
