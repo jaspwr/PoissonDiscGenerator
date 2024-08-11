@@ -1,10 +1,8 @@
 <!DOCTYPE html>
 <h1>Poisson Disk Generator</h1>
 <p>
-  Simple Poisson Disk Generator for sampling in GLSL.
+  Simple Poisson Disk Generator for sampling in GLSL. Note: I am not a mathematician, this is probably not technically correct.
 </p>
-<textarea id="result" style="width: 50%; height: 200px;"></textarea>
-<br>
 <canvas width="600" height="600" id="canvas"></canvas>
 <br>
 Points: <input type="number" value="100" id="pointsCount">
@@ -19,6 +17,14 @@ Radius: <input type="number" value="0.004" id="radius" step="0.001">
 </select>
 <br>
 <button id="generate">Generate</button>
+<hr>
+<br>
+<textarea id="result" style="width: 50%; height: 200px;"></textarea>
+<footer>
+  <p>
+    <a href="https://github.com/jaspwr/PoissonDiscGenerator">Source code</a>
+  </p>
+</footer>
 
 <script>
   const canvas = document.getElementById("canvas");
