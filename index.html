@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <h1>Poisson Disk Generator</h1>
 <p>
-  Simple Poisson Disk Generator for sampling in GLSL. Note: I am not a mathematician, this is probably not technically correct.
+  Simple Poisson Disk Generator for sampling in GLSL. Note: I am not a mathematician, this is probably not technically
+  correct.
 </p>
 <canvas width="600" height="600" id="canvas"></canvas>
 <br>
@@ -27,6 +28,24 @@ Radius: <input type="number" value="0.004" id="radius" step="0.001">
 </footer>
 
 <script>
+  let points = [];
+  let weights = [];
+
+  let radius = 0.004;
+  let pointsCount = 64;
+  let weightMode = "constant";
+
+  function updateParams() {
+    pointsCount = parseFloat(document.getElementById("pointsCount").value);
+    radius = parseFloat(document.getElementById("radius").value);
+    weightMode = document.querySelector("select").value;
+
+    if (isNaN(pointsCount) || isNaN(radius) || pointsCount < 1 || radius <= 0 || pointsCount > 500) {
+      alert("Invalid parameters");
+      return;
+    }
+  }
+
   const canvas = document.getElementById("canvas");
   const ctx = canvas.getContext("2d");
 
@@ -43,17 +62,11 @@ Radius: <input type="number" value="0.004" id="radius" step="0.001">
     ctx.fill();
   }
 
-  let points = [];
-  let weights = [];
-
   function reset() {
     ctx.fillStyle = "white";
     ctx.fillRect(0, 0, width, height);
     points = [];
   }
-
-  let radius = 0.004;
-  let pointsCount = 64;
 
   function newPoint() {
     const theta = Math.random() * Math.PI * 2;
@@ -63,7 +76,11 @@ Radius: <input type="number" value="0.004" id="radius" step="0.001">
     return {x, y};
   }
 
+  /**
+    * Move points that are too close to random positions
+    */
   function spread() {
+    // Approximate minimum distance between points
     let minDist = Math.sqrt(Math.PI * radius * radius / pointsCount) * 0.85;
 
     for (let i = 0; i < pointsCount; i++) {
@@ -75,6 +92,7 @@ Radius: <input type="number" value="0.004" id="radius" step="0.001">
           points[i].y - points[j].y
         );
         if (distance < minDist) {
+          // Was too close so move and start again a j = 0
           points[i] = newPoint();
           j = 0;
           if (retrys++ > 1000) {
@@ -87,10 +105,9 @@ Radius: <input type="number" value="0.004" id="radius" step="0.001">
 
   function toGlsl() {
     let result = `const vec2 POINTS[${points.length}] = vec2[${points.length}](\n`;
-    for (const point of points) {
-      result += `    vec2(${point.x.toFixed(9)}, ${point.y.toFixed(9)}),\n`;
-    }
-    result = result.substring(0, result.length - 2);
+    result += points.map((point) =>
+      `    vec2(${point.x.toFixed(9)}, ${point.y.toFixed(9)})`
+    ).join(",\n");
     result += "\n);\n";
 
     result += `\nconst vec2 WEIGHTS[${points.length}] = vec2[${points.length}](\n${weights
@@ -112,14 +129,6 @@ Radius: <input type="number" value="0.004" id="radius" step="0.001">
   }
 
   function generatePoints() {
-    pointsCount = parseFloat(document.getElementById("pointsCount").value);
-    radius = parseFloat(document.getElementById("radius").value);
-
-    if (isNaN(pointsCount) || isNaN(radius) || pointsCount < 1 || radius <= 0 || pointsCount > 500) {
-      alert("Invalid parameters");
-      return;
-    }
-
     reset();
     for (let i = 0; i < pointsCount; i++) {
       points.push(newPoint());
@@ -131,20 +140,18 @@ Radius: <input type="number" value="0.004" id="radius" step="0.001">
 
     let weight;
 
-    const weightMode = document.querySelector("select").value;
-
     switch (weightMode) {
       case "constant":
         weight = (point) => 1.0;
+        break;
+      case "gaussian":
+        weight = (point) => gaussian(Math.hypot(point.x, point.y), 0, radius);
         break;
       case "linear":
         weight = (point) => 1.0 - Math.hypot(point.x, point.y) / radius;
         break;
       case "quadratic":
         weight = (point) => 1.0 - (Math.hypot(point.x, point.y) / radius) ** 2;
-        break;
-      case "gaussian":
-        weight = (point) => gaussian(Math.hypot(point.x, point.y), 0, radius);
         break;
       default:
         alert("Invalid weight mode");
