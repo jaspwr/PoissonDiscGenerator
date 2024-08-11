@@ -11,6 +11,13 @@ Points: <input type="number" value="100" id="pointsCount">
 <br>
 Radius: <input type="number" value="0.004" id="radius" step="0.001">
 <br>
+<select>
+  <option value="constant">Constant</option>
+  <option value="gaussian">Gaussian</option>
+  <option value="linear">Linear</option>
+  <option value="quadratic">Quadratic</option>
+</select>
+<br>
 <button id="generate">Generate</button>
 
 <script>
@@ -20,8 +27,8 @@ Radius: <input type="number" value="0.004" id="radius" step="0.001">
   const width = canvas.width;
   const height = canvas.height;
 
-  function drawDot(x, y) {
-    ctx.fillStyle = "black";
+  function drawDot(x, y, weight) {
+    ctx.fillStyle = `rgba(${Math.floor(weight * 255)}, 0, 0, 1)`;
     ctx.beginPath();
     const scale = 50000;
     const drawX = (x * scale) + width / 2;
@@ -31,6 +38,7 @@ Radius: <input type="number" value="0.004" id="radius" step="0.001">
   }
 
   let points = [];
+  let weights = [];
 
   function reset() {
     ctx.fillStyle = "white";
@@ -72,14 +80,29 @@ Radius: <input type="number" value="0.004" id="radius" step="0.001">
   }
 
   function toGlsl() {
-    let result = `const vec2 DISK[${points.length}] = vec2[${points.length}](\n`;
+    let result = `const vec2 POINTS[${points.length}] = vec2[${points.length}](\n`;
     for (const point of points) {
       result += `    vec2(${point.x.toFixed(9)}, ${point.y.toFixed(9)}),\n`;
     }
     result = result.substring(0, result.length - 2);
-    result += "\n);";
+    result += "\n);\n";
+
+    result += `\nconst vec2 WEIGHTS[${points.length}] = vec2[${points.length}](\n${weights
+      .map((w) => `    ${w.toFixed(9)}`)
+      .join(",\n")}\n);\n`;
+
+    result += `\nconst int POINTS_COUNT = ${points.length};\n`;
+    result += `const float RADIUS = ${radius.toFixed(9)};\n`;
+    result += `const float TOTAL_WEIGHT = ${weights.reduce((a, b) => a + b, 0).toFixed(9)};\n`;
+
     const textArea = document.getElementById("result");
     textArea.value = result;
+  }
+
+  function gaussian(x, mean = 0, stdDev = 1) {
+    const factor = 1 / (stdDev * Math.sqrt(2 * Math.PI));
+    const exponent = -((x - mean) ** 2) / (2 * stdDev ** 2);
+    return factor * Math.exp(exponent);
   }
 
   function generatePoints() {
@@ -100,13 +123,40 @@ Radius: <input type="number" value="0.004" id="radius" step="0.001">
       spread();
     }
 
+    let weight;
+
+    const weightMode = document.querySelector("select").value;
+
+    switch (weightMode) {
+      case "constant":
+        weight = (point) => 1.0;
+        break;
+      case "linear":
+        weight = (point) => 1.0 - Math.hypot(point.x, point.y) / radius;
+        break;
+      case "quadratic":
+        weight = (point) => 1.0 - (Math.hypot(point.x, point.y) / radius) ** 2;
+        break;
+      case "gaussian":
+        weight = (point) => gaussian(Math.hypot(point.x, point.y), 0, radius);
+        break;
+      default:
+        alert("Invalid weight mode");
+        return;
+    }
+
+    weights = points.map(weight);
+    totalWeight = weights.reduce((a, b) => a + b, 0);
+    weights = weights.map((w) => w / totalWeight);
+
     drawPoints();
     toGlsl();
   }
 
   function drawPoints() {
-    for (const point of points) {
-      drawDot(point.x, point.y);
+    const maxWeight = Math.max(...weights);
+    for (let i = 0; i < points.length; i++) {
+      drawDot(points[i].x, points[i].y, weights[i] / maxWeight);
     }
   }
 
