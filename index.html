@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <h1>Poisson Disk Generator</h1>
 <p>
-Simple Poisson Disk Generator for sampling in GLSL.
+  Simple Poisson Disk Generator for sampling in GLSL.
 </p>
 <textarea id="result" style="width: 50%; height: 200px;"></textarea>
 <br>
@@ -11,6 +11,7 @@ Points: <input type="number" value="100" id="pointsCount">
 <br>
 Radius: <input type="number" value="0.004" id="radius" step="0.001">
 <br>
+<button id="generate">Generate</button>
 
 <script>
   const canvas = document.getElementById("canvas");
@@ -71,10 +72,12 @@ Radius: <input type="number" value="0.004" id="radius" step="0.001">
   }
 
   function toGlsl() {
-    let result = "";
+    let result = `const vec2 DISK[${points.length}] = vec2[${points.length}](\n`;
     for (const point of points) {
-      result += `vec2(${point.x.toFixed(9)}, ${point.y.toFixed(9)}),\n`;
+      result += `    vec2(${point.x.toFixed(9)}, ${point.y.toFixed(9)}),\n`;
     }
+    result = result.substring(0, result.length - 2);
+    result += "\n);";
     const textArea = document.getElementById("result");
     textArea.value = result;
   }
@@ -82,6 +85,11 @@ Radius: <input type="number" value="0.004" id="radius" step="0.001">
   function generatePoints() {
     pointsCount = parseFloat(document.getElementById("pointsCount").value);
     radius = parseFloat(document.getElementById("radius").value);
+
+    if (isNaN(pointsCount) || isNaN(radius) || pointsCount < 1 || radius <= 0 || pointsCount > 500) {
+      alert("Invalid parameters");
+      return;
+    }
 
     reset();
     for (let i = 0; i < pointsCount; i++) {
@@ -103,6 +111,6 @@ Radius: <input type="number" value="0.004" id="radius" step="0.001">
   }
 
   generatePoints();
-</script>
 
-<button onclick="generatePoints()">Generate</button>
+  document.getElementById("generate").addEventListener("click", generatePoints);
+</script>
