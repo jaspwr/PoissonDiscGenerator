@@ -129,12 +129,14 @@ Radius: <input type="number" value="0.004" id="radius" step="0.001">
   }
 
   function generatePoints() {
+    updateParams();
     reset();
+
     for (let i = 0; i < pointsCount; i++) {
       points.push(newPoint());
     }
 
-    for (let i = 0; i < 4; i++) {
+    for (let i = 0; i < 5; i++) {
       spread();
     }
 
