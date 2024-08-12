@@ -77,25 +77,33 @@ Radius: <input type="number" value="0.004" id="radius" step="0.001">
   }
 
   /**
+    * Approximate minimum distance between points
+    */
+  function minDist() {
+    return Math.sqrt(Math.PI * radius * radius / pointsCount) * 0.85;
+  }
+
+  /**
     * Move points that are too close to random positions
     */
   function spread() {
-    // Approximate minimum distance between points
-    let minDist = Math.sqrt(Math.PI * radius * radius / pointsCount) * 0.85;
+    const d = minDist();
 
     for (let i = 0; i < pointsCount; i++) {
       let retrys = 0;
       for (let j = 0; j < pointsCount; j++) {
         if (i === j) continue;
+
         const distance = Math.hypot(
           points[i].x - points[j].x,
           points[i].y - points[j].y
         );
-        if (distance < minDist) {
+
+        if (distance < d) {
           // Was too close so move and start again a j = 0
           points[i] = newPoint();
           j = 0;
-          if (retrys++ > 1000) {
+          if (retrys++ > 2000) {
             break;
           }
         }
@@ -103,16 +111,42 @@ Radius: <input type="number" value="0.004" id="radius" step="0.001">
     }
   }
 
+  /**
+    * Validate that all points are at least minDist apart
+    */
+  function validate() {
+    const d = minDist();
+
+    for (let i = 0; i < pointsCount; i++) {
+      for (let j = 0; j < pointsCount; j++) {
+        if (i === j) continue;
+
+        const distance = Math.hypot(
+          points[i].x - points[j].x,
+          points[i].y - points[j].y
+        );
+
+        if (distance < d) {
+          return false;
+        }
+      }
+    }
+
+    return true;
+  }
+
   function toGlsl() {
     let result = `const vec2 POINTS[${points.length}] = vec2[${points.length}](\n`;
-    result += points.map((point) =>
-      `    vec2(${point.x.toFixed(9)}, ${point.y.toFixed(9)})`
-    ).join(",\n");
+    result += points
+      .map((point) => `    vec2(${point.x.toFixed(9)}, ${point.y.toFixed(9)})`)
+      .join(",\n");
     result += "\n);\n";
 
-    result += `\nconst vec2 WEIGHTS[${points.length}] = vec2[${points.length}](\n${weights
+    result += `\nconst vec2 WEIGHTS[${points.length}] = vec2[${points.length}](\n`;
+    result += weights
       .map((w) => `    ${w.toFixed(9)}`)
-      .join(",\n")}\n);\n`;
+      .join(",\n");
+    result += "\n);\n";
 
     result += `\nconst int POINTS_COUNT = ${points.length};\n`;
     result += `const float RADIUS = ${radius.toFixed(9)};\n`;
@@ -138,6 +172,11 @@ Radius: <input type="number" value="0.004" id="radius" step="0.001">
 
     for (let i = 0; i < 5; i++) {
       spread();
+    }
+
+    if (!validate()) {
+      generatePoints();
+      return;
     }
 
     let weight;
