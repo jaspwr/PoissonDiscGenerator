@@ -1,8 +1,16 @@
 <!DOCTYPE html>
-<h1>Poisson Disk Generator</h1>
+
+<head>
+  <title>Poisson Disk Generator</title>
+</head>
+
+<h1>
+  <i>
+    Poisson Disk Generator
+  </i>
+</h1>
 <p>
-  Simple Poisson Disk Generator for sampling in GLSL. Note: I am not a mathematician, this is probably not technically
-  correct.
+  Simple Poisson Disk Generator for sampling in GLSL.
 </p>
 <canvas width="600" height="600" id="canvas"></canvas>
 <br>
@@ -10,7 +18,7 @@ Points: <input type="number" value="100" id="pointsCount">
 <br>
 Radius: <input type="number" value="0.004" id="radius" step="0.001">
 <br>
-<select>
+Weight mode: <select>
   <option value="constant">Constant</option>
   <option value="gaussian">Gaussian</option>
   <option value="linear">Linear</option>
@@ -100,7 +108,7 @@ Radius: <input type="number" value="0.004" id="radius" step="0.001">
         );
 
         if (distance < d) {
-          // Was too close so move and start again a j = 0
+          // Was too close so move and start again at j = 0
           points[i] = newPoint();
           j = 0;
           if (retrys++ > 2000) {
