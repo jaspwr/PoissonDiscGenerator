@@ -150,7 +150,7 @@ Weight mode: <select>
       .join(",\n");
     result += "\n);\n";
 
-    result += `\nconst vec2 WEIGHTS[${points.length}] = vec2[${points.length}](\n`;
+    result += `\nconst float WEIGHTS[${points.length}] = float[${points.length}](\n`;
     result += weights
       .map((w) => `    ${w.toFixed(9)}`)
       .join(",\n");
