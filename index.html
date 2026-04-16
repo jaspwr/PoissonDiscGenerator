@@ -4,36 +4,73 @@
   <title>Poisson Disk Generator</title>
 </head>
 
-<h1>
-  <i>
-    Poisson Disk Generator
-  </i>
-</h1>
-<p>
-  Simple Poisson Disk Generator for sampling in GLSL.
-</p>
-<canvas width="600" height="600" id="canvas"></canvas>
-<br>
-Points: <input type="number" value="100" id="pointsCount">
-<br>
-Radius: <input type="number" value="0.004" id="radius" step="0.001">
-<br>
-Weight mode: <select>
-  <option value="constant">Constant</option>
-  <option value="gaussian">Gaussian</option>
-  <option value="linear">Linear</option>
-  <option value="quadratic">Quadratic</option>
-</select>
-<br>
-<button id="generate">Generate</button>
-<hr>
-<br>
-<textarea id="result" style="width: 50%; height: 200px;"></textarea>
-<footer>
+<body>
+  <h1>
+    <i>
+      Poisson Disk Generator
+    </i>
+  </h1>
   <p>
-    <a href="https://github.com/jaspwr/PoissonDiscGenerator">Source code</a>
+    Poisson Disk Generator for sampling in GLSL.
   </p>
-</footer>
+  <div class="main">
+    <canvas width="300" height="300" id="canvas"></canvas>
+    <div class="options">
+      Points: <input type="number" value="100" id="pointsCount">
+      Radius: <input type="number" value="0.004" id="radius" step="0.001">
+      Weight mode: <select>
+        <option value="constant">Constant</option>
+        <option value="gaussian">Gaussian</option>
+        <option value="linear">Linear</option>
+        <option value="quadratic">Quadratic</option>
+      </select>
+      <button id="generate">Generate</button>
+    </div>
+  </div>
+  <br>
+  <textarea id="result" style="width: 50%; height: 200px;"></textarea>
+  <footer>
+    <p>
+      <a href="https://github.com/jaspwr/PoissonDiscGenerator">Source code</a>
+    </p>
+  </footer>
+</body>
+
+<style>
+  body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+  }
+
+  h1 {
+    margin-bottom: 0px;
+  }
+
+  .main {
+    display: flex;
+    flex-direction: row;
+    border: solid 1px black; 
+    padding: 20px;
+  }
+
+  .options {
+    display: flex;
+    flex-direction: column;
+    padding: 30px;
+    gap: 5px;
+  }
+
+  .options>input,
+  select {
+    margin-left: 10px;
+  }
+
+  #generate {
+    margin-top: 20px;
+  }
+</style>
 
 <script>
   let points = [];
@@ -63,10 +100,10 @@ Weight mode: <select>
   function drawDot(x, y, weight) {
     ctx.fillStyle = `rgba(${Math.floor(weight * 255)}, 0, 0, 1)`;
     ctx.beginPath();
-    const scale = 50000;
+    const scale = 20000;
     const drawX = (x * scale) + width / 2;
     const drawY = (y * scale) + height / 2;
-    ctx.arc(drawX, drawY, 5, 0, 2 * Math.PI);
+    ctx.arc(drawX, drawY, 3, 0, 2 * Math.PI);
     ctx.fill();
   }
 
